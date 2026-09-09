@@ -27,7 +27,7 @@ def get_campaign_os(campaign):
     elif "Run3" in campaign:
         required_os = "el8"
     elif campaign == "NANOGEN":
-        required_os = "el7"
+        required_os = "el8"
     else:
         raise ValueError("I don't know what os to use for campaign {campaign}. Please add it to get_campaign_os().")
     return required_os

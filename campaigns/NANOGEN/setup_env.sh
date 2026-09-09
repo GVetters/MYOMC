@@ -23,8 +23,8 @@ cd env
 source /cvmfs/cms.cern.ch/cmsset_default.sh
 
 #export SCRAM_ARCH=slc6_amd64_gcc700
-scram project -n "CMSSW_10_6_32_patch1" CMSSW_10_6_32_patch1
-cd CMSSW_10_6_32_patch1/src
+scram project -n "CMSSW_14_0_18" CMSSW_14_0_18
+cd CMSSW_14_0_18/src
 eval `scram runtime -sh`
 #git cms-init
 #git cms-merge-topic DryRun:CMSSW_10_6_22_NANOGEN-NANOGEN

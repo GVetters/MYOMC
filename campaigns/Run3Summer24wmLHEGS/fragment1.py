@@ -46,7 +46,7 @@ generator = cms.EDFilter(
             "25:onMode = off",
             "25:onIfMatch = 5 -5",
             "25:onIfMatch = 24 -24",
-            "25:onIfMatch = 23 23",
+            #"25:onIfMatch = 23 23",
 
             # ResonanceDecayFilter match quark-level hadronic decays
             "ResonanceDecayFilter:filter = on",

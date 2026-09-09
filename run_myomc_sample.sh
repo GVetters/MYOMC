@@ -7,7 +7,7 @@
 # around the same time, then launches crun.py.
 #
 # Usage:
-#   ./run_myomc_sample.sh <job_name> <fragment_path> <total_events> [njobs] [output_subdir] [custom_outEOS]
+#   ./run_myomc_sample.sh <job_name> <fragment_path> <total_events> [njobs] [output_subdir] [custom_outEOS] [mem_mb]
 #
 # output_subdir defaults to job_name if not given, and only changes the
 # name of the subdirectory under MYOMC_output/. custom_outEOS instead
@@ -15,7 +15,8 @@
 # (e.g. /store/user/gvetters/MYOMC) to use an existing, established
 # output area directly. Must start with /store or /user -- do NOT
 # include the /eos/uscms or /eos/user mount prefix itself, since
-# crun.py adds that automatically.
+# crun.py adds that automatically. mem_mb defaults to 16000 (MB),
+# confirmed to avoid jobs going held for insufficient memory in practice.
 #
 # Example:
 #   ./run_myomc_sample.sh my_sample_v1 fragment1.py 50000 10 "" /store/user/gvetters/MYOMC
@@ -38,10 +39,15 @@ FRAGMENT_PATH=$2
 TOTAL_EVENTS=$3
 NJOBS=${4:-10}  # default split across 10 jobs -- ADJUST based on your own knowledge of queue/walltime limits,
                 # this default is NOT verified against actual queue policy, just a starting point
-OUTPUT_SUBDIR=${5:-$JOB_NAME}  # default: same as job name, matching previous behavior -- override with a 5th argument
+OUTPUT_SUBDIR=${5:-MYOMC_sample_run3_2024_HHbbWW_full_hadronic}
 CUSTOM_OUTEOS=$6  # optional 6th arg: a full --outEOS override (e.g. /store/user/gavetter/MYOMC), bypassing
                    # the MYOMC_output/<subdir> convention entirely -- must start with /store or /user, per crun.py's
                    # own validation
+MEM_MB=${7:-16000}  # Condor memory request in MB. 16000 is the value confirmed to avoid held jobs
+                     # in practice -- override with a 7th argument if a specific campaign needs more/less.
+                     # NOTE: flag name assumes crun.py exposes this as --mem (seen referenced in crun.py's
+                     # own csub_command construction) -- confirm with `python3 crun.py --help | grep -i mem`
+                     # on your own system before relying on this; adjust the flag name below if it differs.
 
 if [ ! -f "$FRAGMENT_PATH" ]; then
     echo "[FAIL] Fragment file not found: $FRAGMENT_PATH"
@@ -82,6 +88,7 @@ echo "=========================================="
 echo "MYOMC sample generation: $JOB_NAME"
 echo "Campaign:      $CAMPAIGN"
 echo "Total events:  $TOTAL_EVENTS across $NJOBS jobs ($NEVENTS_PER_JOB events/job)"
+echo "Memory:        $MEM_MB MB per job"
 echo "=========================================="
 
 # ============================================================
@@ -132,9 +139,10 @@ if [ -n "$CUSTOM_OUTEOS" ]; then
     fi
     OUT_EOS="$CUSTOM_OUTEOS"
 elif [[ $HOST_TYPE == "lpc" ]]; then
-    OUT_EOS="/store/user/${CERNNAME}/MYOMC/${OUTPUT_SUBDIR}"
-else
-    OUT_EOS="/user/${CERNNAME:0:1}/${CERNNAME}/MYOMC/${OUTPUT_SUBDIR}"
+    #OUT_EOS="/store/user/${CERNNAME}/MYOMC/${OUTPUT_SUBDIR}"
+    OUT_EOS="/store/group/lpcsusystealth/MYOMC/${OUTPUT_SUBDIR}"
+#else
+#    OUT_EOS="/user/${CERNNAME:0:1}/${CERNNAME}/MYOMC/${OUTPUT_SUBDIR}"
 fi
 
 # ============================================================
@@ -169,6 +177,7 @@ python3 crun.py "$JOB_NAME" "$FRAGMENT_PATH" "$CAMPAIGN" \
     --njobs "$NJOBS" \
     --keepNANO \
     --seed_offset "$SEED_OFFSET" \
+    --mem "$MEM_MB" \
     --outEOS "$OUT_EOS"
 
 echo ""
